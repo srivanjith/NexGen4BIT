@@ -3,10 +3,6 @@ from app.database.mongodb import check_db_health
 
 router = APIRouter()
 
-@router.get("/")
-def read_root():
-    return {"status": "ok"}
-
 @router.get("/health")
 @router.get("/api/health")
 @router.get("/healthz")
