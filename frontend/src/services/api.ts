@@ -34,38 +34,35 @@ export const apiService = {
   async getHealth(): Promise<HealthResponse> {
     try {
       // Primary health check targeting actual FastAPI /health endpoint
-      const response = await apiClient.get<any>('/health');
+      const response = await apiClient.get<HealthResponse>('/health');
       if (response.data) {
-        const rawDb = response.data.database || '';
-        const isDbConnected = rawDb === 'connected' || (response.data.status === 'healthy' && !rawDb.startsWith('disconnected'));
         return {
           status: response.data.status || 'healthy',
-          database: isDbConnected ? 'connected' : (rawDb.includes('disconnected') ? 'disconnected' : 'fallback'),
-          backend: 'online',
+          database: response.data.database || 'connected',
+          backend: response.data.backend || 'online',
         };
       }
+      return response.data;
     } catch (error) {
       try {
         // Fallback check targeting /api/health
-        const fallback = await apiClient.get<any>('/api/health');
+        const fallback = await apiClient.get<HealthResponse>('/api/health');
         if (fallback.data) {
-          const rawDb = fallback.data.database || '';
-          const isDbConnected = rawDb === 'connected' || (fallback.data.status === 'healthy' && !rawDb.startsWith('disconnected'));
           return {
             status: fallback.data.status || 'healthy',
-            database: isDbConnected ? 'connected' : (rawDb.includes('disconnected') ? 'disconnected' : 'fallback'),
-            backend: 'online',
+            database: fallback.data.database || 'connected',
+            backend: fallback.data.backend || 'online',
           };
         }
       } catch (fallbackErr) {
         // Ignored
       }
+      return {
+        status: 'degraded',
+        database: 'disconnected',
+        backend: 'offline',
+      };
     }
-    return {
-      status: 'degraded',
-      database: 'disconnected',
-      backend: 'offline',
-    };
   },
 
 
