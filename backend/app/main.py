@@ -15,9 +15,20 @@ class VercelPathFixMiddleware:
 
     async def __call__(self, scope, receive, send):
         if scope.get("type") == "http":
+            query_string = scope.get("query_string", b"").decode("latin1")
             path = scope.get("path", "")
 
-            # Strip /api/index.py or /api/index prefix if present
+            if "__path__=" in query_string:
+                import urllib.parse
+                qs = urllib.parse.parse_qs(query_string)
+                if "__path__" in qs and qs["__path__"]:
+                    path = qs["__path__"][0]
+
+                # Strip __path__ from query string so endpoints receive clean parameters
+                param_list = query_string.split("&")
+                filtered_params = [p for p in param_list if not p.startswith("__path__=")]
+                scope["query_string"] = "&".join(filtered_params).encode("latin1")
+
             if path.startswith("/api/index.py"):
                 path = path[len("/api/index.py"):]
             elif path.startswith("/api/index"):
