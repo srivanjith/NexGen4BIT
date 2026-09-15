@@ -5,7 +5,7 @@ router = APIRouter()
 
 @router.get("/")
 def read_root():
-    return {"message": "GovVerify API is running"}
+    return {"status": "ok"}
 
 @router.get("/api/health")
 def get_health():

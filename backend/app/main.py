@@ -13,6 +13,14 @@ app = FastAPI(
     version="1.0.0"
 )
 
+@app.get("/")
+def root():
+    return {"status": "ok"}
+
+@app.get("/api")
+def api_root():
+    return {"status": "ok"}
+
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
