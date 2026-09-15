@@ -153,8 +153,12 @@ def get_documents(
         else:
             query["$or"] = search_query
 
-    docs = list(collection.find(query).sort("createdAt", -1).limit(limit if limit and limit > 0 else 100))
-    return [serialize_doc(doc) for doc in docs]
+    try:
+        docs = list(collection.find(query).sort("createdAt", -1).limit(limit if limit and limit > 0 else 100))
+        return [serialize_doc(doc) for doc in docs]
+    except Exception as err:
+        print(f"Error fetching documents: {err}")
+        return []
 
 
 

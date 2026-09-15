@@ -50,8 +50,12 @@ def get_conflicts(
             {"isDataset": False}
         ]
 
-    conflicts = list(col.find(query).sort("createdAt", -1))
-    return [serialize_mongo(c) for c in conflicts]
+    try:
+        conflicts = list(col.find(query).sort("createdAt", -1))
+        return [serialize_mongo(c) for c in conflicts]
+    except Exception as err:
+        print(f"Error fetching conflicts: {err}")
+        return []
 
 @router.get("/{conflict_id}")
 def get_conflict(conflict_id: str):
