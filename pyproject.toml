@@ -13,3 +13,7 @@ dependencies = [
     "python-multipart>=0.0.6",
     "python-docx>=1.0.0"
 ]
+
+[tool.pyright]
+extraPaths = ["backend"]
+
