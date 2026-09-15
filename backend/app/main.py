@@ -29,8 +29,12 @@ app.add_middleware(
 )
 
 # Mount uploads static folder if exists
-os.makedirs(settings.UPLOADS_DIR, exist_ok=True)
-app.mount("/uploads", StaticFiles(directory=settings.UPLOADS_DIR), name="uploads")
+try:
+    os.makedirs(settings.UPLOADS_DIR, exist_ok=True)
+    if os.path.exists(settings.UPLOADS_DIR):
+        app.mount("/uploads", StaticFiles(directory=settings.UPLOADS_DIR), name="uploads")
+except Exception:
+    pass
 
 # Connect DB on startup
 @app.on_event("startup")
