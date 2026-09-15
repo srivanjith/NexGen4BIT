@@ -1,5 +1,5 @@
 import os
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
@@ -47,6 +47,17 @@ from fastapi import UploadFile, File, Form
 @app.get("/")
 def root():
     return {"status": "ok", "message": "GovVerify Backend API"}
+
+@app.get("/debug-request")
+@app.post("/debug-request")
+def debug_request(request: Request):
+    return {
+        "url": str(request.url),
+        "path": request.url.path,
+        "method": request.method,
+        "headers": dict(request.headers),
+        "scope_path": request.scope.get("path")
+    }
 
 @app.get("/api")
 def api_root():
