@@ -1,7 +1,29 @@
 import os
 import sys
 
-# Ensure backend directory is in python path
-sys.path.append(os.path.join(os.path.dirname(__file__), '..', 'backend'))
+current_dir = os.path.dirname(os.path.abspath(__file__))
+backend_path = os.path.abspath(os.path.join(current_dir, '..', 'backend'))
+parent_path = os.path.abspath(os.path.join(current_dir, '..'))
 
-from app.main import app
+if os.path.exists(backend_path) and backend_path not in sys.path:
+    sys.path.insert(0, backend_path)
+if parent_path not in sys.path:
+    sys.path.insert(0, parent_path)
+if current_dir not in sys.path:
+    sys.path.insert(0, current_dir)
+
+try:
+    from app.main import app
+except Exception as e:
+    import traceback
+    error_detail = traceback.format_exc()
+    from fastapi import FastAPI
+    app = FastAPI(title="GovVerify API Fallback")
+
+    @app.get("/")
+    @app.get("/api")
+    def root():
+        return {"status": "error", "fallback": True, "detail": str(e), "traceback": error_detail}
+
+handler = app
+

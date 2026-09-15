@@ -13,8 +13,9 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440
 
     # File Upload Settings
-    UPLOADS_DIR: str = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "uploads"))
+    UPLOADS_DIR: str = "/tmp/uploads" if (os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV")) else os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "uploads"))
     MAX_FILE_SIZE_MB: int = 10
+
 
     # AI / ML Settings
     MODEL_NAME: str = "all-MiniLM-L6-v2"
