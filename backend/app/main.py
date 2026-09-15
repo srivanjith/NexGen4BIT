@@ -16,6 +16,14 @@ class VercelPathFixMiddleware:
     async def __call__(self, scope, receive, send):
         if scope.get("type") == "http":
             path = scope.get("path", "")
+            query_string = scope.get("query_string", b"").decode("latin1")
+
+            if "path=" in query_string:
+                import urllib.parse
+                qs = urllib.parse.parse_qs(query_string)
+                if "path" in qs and qs["path"]:
+                    path = qs["path"][0]
+
             if path.startswith("/api/index.py"):
                 path = path[len("/api/index.py"):]
             elif path.startswith("/api/index"):
@@ -51,6 +59,7 @@ def api_root():
 def health_check():
     return get_health()
 
+@app.post("/")
 @app.post("/documents/upload")
 @app.post("/documents/upload/")
 @app.post("/api/documents/upload")

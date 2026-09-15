@@ -26,6 +26,14 @@ except Exception as e:
         async def __call__(self, scope, receive, send):
             if scope.get("type") == "http":
                 path = scope.get("path", "")
+                query_string = scope.get("query_string", b"").decode("latin1")
+
+                if "path=" in query_string:
+                    import urllib.parse
+                    qs = urllib.parse.parse_qs(query_string)
+                    if "path" in qs and qs["path"]:
+                        path = qs["path"][0]
+
                 if path.startswith("/api/index.py"):
                     path = path[len("/api/index.py"):]
                 elif path.startswith("/api/index"):
@@ -53,6 +61,21 @@ except Exception as e:
             "detail": str(e),
             "traceback": error_detail
         }
+
+    from typing import Optional
+    from fastapi import UploadFile, File, Form
+
+    @app.post("/")
+    @app.post("/documents/upload")
+    @app.post("/api/documents/upload")
+    async def fallback_upload_document(
+        file: UploadFile = File(...),
+        documentType: str = Form("Government Order"),
+        department: str = Form("General"),
+        documentDate: Optional[str] = Form(None)
+    ):
+        from app.api.routes.documents import upload_document
+        return await upload_document(file, documentType, department, documentDate)
 
 handler = app
 
