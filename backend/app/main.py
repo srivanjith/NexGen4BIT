@@ -19,13 +19,13 @@ class VercelPathFixMiddleware:
             path = scope.get("path", "")
 
             override_path = None
-            if "path=" in query_string or "__path__=" in query_string:
+            if "__path__=" in query_string or "path=" in query_string:
                 import urllib.parse
                 qs = urllib.parse.parse_qs(query_string)
-                if "path" in qs and qs["path"]:
-                    override_path = qs["path"][0]
-                elif "__path__" in qs and qs["__path__"]:
+                if "__path__" in qs and qs["__path__"]:
                     override_path = qs["__path__"][0]
+                elif "path" in qs and qs["path"]:
+                    override_path = qs["path"][0]
 
                 param_list = query_string.split("&")
                 filtered_params = [
@@ -46,18 +46,6 @@ class VercelPathFixMiddleware:
                 path = "/" + path.lstrip("/")
 
             scope["path"] = path
-
-            async def custom_send(message):
-                if message["type"] == "http.response.start":
-                    headers = list(message.get("headers", []))
-                    headers.append((b"x-debug-path", path.encode("latin1")))
-                    headers.append((b"x-debug-override", str(override_path).encode("latin1")))
-                    headers.append((b"x-debug-qs", query_string.encode("latin1")))
-                    message["headers"] = headers
-                await send(message)
-
-            await self.app(scope, receive, custom_send)
-            return
         await self.app(scope, receive, send)
 
 
