@@ -1,0 +1,19 @@
+{
+  "status": "trained",
+  "lastTrainedAt": "2026-09-15T08:29:45.074503",
+  "sampleCount": 7538,
+  "vocabularySize": 10000,
+  "accuracy": 0.998,
+  "accuracyPercentage": "99.8%",
+  "trainingDurationSeconds": 18.15,
+  "classes": [
+    "Government Circular",
+    "Government Policy",
+    "Government Act",
+    "Inter-Governmental Agreement",
+    "Rules & Regulations",
+    "Government Order",
+    "Government Guidelines"
+  ],
+  "modelDirectory": "D:\\agentic llm\\government-document-conflict\\backend\\app\\ml\\models"
+}
