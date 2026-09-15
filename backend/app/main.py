@@ -73,6 +73,39 @@ async def direct_upload_document(
     from app.api.routes.documents import upload_document
     return await upload_document(file, documentType, department, documentDate)
 
+@app.get("/documents")
+@app.get("/documents/")
+@app.get("/api/documents")
+@app.get("/api/documents/")
+def direct_get_documents(
+    isDataset: Optional[bool] = None,
+    limit: Optional[int] = 100,
+    search: Optional[str] = None
+):
+    from app.api.routes.documents import get_documents
+    return get_documents(isDataset=isDataset, limit=limit, search=search)
+
+@app.get("/stats")
+@app.get("/api/stats")
+def direct_get_stats():
+    from app.api.routes.stats import get_stats
+    return get_stats()
+
+@app.get("/conflicts")
+@app.get("/api/conflicts")
+def direct_get_conflicts(
+    severity: Optional[str] = None,
+    limit: Optional[int] = 100
+):
+    from app.api.routes.conflicts import get_conflicts
+    return get_conflicts(severity=severity, limit=limit)
+
+@app.get("/analysis")
+@app.get("/api/analysis")
+def direct_get_analyses(limit: Optional[int] = 50):
+    from app.api.routes.analysis import get_analyses
+    return get_analyses(limit=limit)
+
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
