@@ -16,6 +16,8 @@ from app.processors.statement_extractor import extract_statements_from_text
 logging.basicConfig(level=logging.INFO, format="%(asctime)s [%(levelname)s] %(message)s")
 logger = logging.getLogger("govverify.import_dataset")
 
+from typing import Optional
+
 def categorize_document_type(title: str, source: str) -> str:
     title_lower = str(title).lower()
     if "act" in title_lower:
@@ -35,7 +37,7 @@ def categorize_document_type(title: str, source: str) -> str:
     else:
         return "Government Order"
 
-def run_import(zip_file_path: str = None, max_records: int = None):
+def run_import(zip_file_path: Optional[str] = None, max_records: Optional[int] = None):
     """Imports indian_laws_and_acts_v2 dataset into MongoDB documents collection."""
     if not zip_file_path:
         # Search workspace directory candidates
