@@ -137,11 +137,10 @@ def get_documents(
         return []
     
     query = {}
-    if isDataset is not None:
-        query["isDataset"] = isDataset
-    elif isDataset is None:
-        # Default: Show user-uploaded & custom documents
-        query["isDataset"] = False
+    if isDataset is True:
+        query["isDataset"] = True
+    elif isDataset is False:
+        query["$or"] = [{"isDataset": False}, {"isDataset": {"$exists": False}}]
 
     if search:
         search_query = [
@@ -155,11 +154,6 @@ def get_documents(
             query["$or"] = search_query
 
     docs = list(collection.find(query).sort("createdAt", -1).limit(limit if limit and limit > 0 else 100))
-    
-    # Fallback if no non-dataset user documents found
-    if not docs and isDataset is None and not search:
-        docs = list(collection.find().sort("createdAt", -1).limit(50))
-        
     return [serialize_doc(doc) for doc in docs]
 
 

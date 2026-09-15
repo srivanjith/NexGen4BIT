@@ -18,11 +18,24 @@ class VercelPathFixMiddleware:
             path = scope.get("path", "")
             query_string = scope.get("query_string", b"").decode("latin1")
 
+            real_path = None
             if "path=" in query_string:
                 import urllib.parse
                 qs = urllib.parse.parse_qs(query_string)
                 if "path" in qs and qs["path"]:
-                    path = qs["path"][0]
+                    real_path = qs["path"][0]
+
+            if not real_path:
+                headers = dict(scope.get("headers", []))
+                header_dict = {k.decode("latin1").lower(): v.decode("latin1") for k, v in headers.items()}
+                for h in ["x-matched-path", "x-forwarded-uri", "x-original-url"]:
+                    val = header_dict.get(h)
+                    if val and not val.startswith("/api/index"):
+                        real_path = val
+                        break
+
+            if real_path:
+                path = real_path
 
             if path.startswith("/api/index.py"):
                 path = path[len("/api/index.py"):]
@@ -34,6 +47,7 @@ class VercelPathFixMiddleware:
 
             scope["path"] = path
         await self.app(scope, receive, send)
+
 
 app = FastAPI(
     title="GovVerify API",
@@ -98,12 +112,14 @@ def direct_get_conflicts(
     limit: Optional[int] = 100
 ):
     from app.api.routes.conflicts import get_conflicts
+    # pyrefly: ignore [unexpected-keyword]
     return get_conflicts(severity=severity, limit=limit)
 
 @app.get("/analysis")
 @app.get("/api/analysis")
 def direct_get_analyses(limit: Optional[int] = 50):
     from app.api.routes.analysis import get_analyses
+    # pyrefly: ignore [unexpected-keyword]
     return get_analyses(limit=limit)
 
 # CORS configuration

@@ -94,9 +94,12 @@ export const DocumentsPage: React.FC = () => {
     }
 
     try {
-      await apiService.uploadDocument(formData);
+      const uploadedDoc = await apiService.uploadDocument(formData);
       setSelectedFile(null);
       setIsModalOpen(false);
+      if (uploadedDoc && uploadedDoc._id) {
+        setDocuments(prev => [uploadedDoc, ...prev.filter(d => d._id !== uploadedDoc._id)]);
+      }
       await fetchDocuments();
     } catch (err: any) {
       setUploadError(err?.response?.data?.detail || 'Failed to upload document. Try again.');
@@ -162,11 +165,17 @@ export const DocumentsPage: React.FC = () => {
     }
   };
 
-  const filteredDocuments = documents.filter((doc) =>
-    doc.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doc.department.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    doc.documentType.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredDocuments = documents.filter((doc) => {
+    const titleStr = doc.title || doc.fileName || '';
+    const deptStr = doc.department || '';
+    const typeStr = doc.documentType || '';
+    const queryStr = searchQuery.toLowerCase();
+    return (
+      titleStr.toLowerCase().includes(queryStr) ||
+      deptStr.toLowerCase().includes(queryStr) ||
+      typeStr.toLowerCase().includes(queryStr)
+    );
+  });
 
   return (
     <div className="space-y-6">
