@@ -123,12 +123,30 @@ export const apiService = {
   },
 
   async uploadDocument(formData: FormData): Promise<DocumentItem> {
-    const response = await apiClient.post<DocumentItem>('/api/documents/upload', formData, {
-      headers: {
-        'Content-Type': undefined,
-      },
+    const baseUrl = getApiBaseUrl() || 'https://nex-gen4-bit.vercel.app';
+    const uploadUrl = `${baseUrl}/api/documents/upload`;
+
+    const response = await fetch(uploadUrl, {
+      method: 'POST',
+      body: formData,
     });
-    return response.data;
+
+    if (!response.ok) {
+      let errorDetail = `Upload failed with status ${response.status}`;
+      try {
+        const errorJson = await response.json();
+        if (errorJson && errorJson.detail) {
+          errorDetail = errorJson.detail;
+        }
+      } catch (e) {
+        // ignore
+      }
+      const err: any = new Error(errorDetail);
+      err.response = { status: response.status, data: { detail: errorDetail } };
+      throw err;
+    }
+
+    return await response.json();
   },
 
   async deleteDocument(id: string): Promise<{ message: string; id: string }> {
