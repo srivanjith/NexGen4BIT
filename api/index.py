@@ -23,8 +23,17 @@ except Exception as e:
 
     @app.get("/")
     @app.get("/api")
+    @app.get("/health")
+    @app.get("/api/health")
     def root():
-        return {"status": "error", "fallback": True, "detail": str(e), "traceback": error_detail}
+        return {
+            "status": "degraded",
+            "database": "disconnected",
+            "backend": "online",
+            "fallback": True,
+            "detail": str(e),
+            "traceback": error_detail
+        }
 
 handler = app
 

@@ -26,7 +26,8 @@ export const apiService = {
   // System Health
   async getHealth(): Promise<HealthResponse> {
     try {
-      const response = await apiClient.get<HealthResponse>('/api/health');
+      // Primary health check targeting actual FastAPI /health endpoint
+      const response = await apiClient.get<HealthResponse>('/health');
       if (response.data) {
         return {
           status: response.data.status || 'healthy',
@@ -37,12 +38,13 @@ export const apiService = {
       return response.data;
     } catch (error) {
       try {
-        const fallback = await apiClient.get<any>('/health');
+        // Fallback check targeting /api/health
+        const fallback = await apiClient.get<HealthResponse>('/api/health');
         if (fallback.data) {
           return {
             status: fallback.data.status || 'healthy',
             database: fallback.data.database || 'connected',
-            backend: 'online',
+            backend: fallback.data.backend || 'online',
           };
         }
       } catch (fallbackErr) {

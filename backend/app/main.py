@@ -7,6 +7,8 @@ from app.config import settings
 from app.database.mongodb import connect_to_mongo
 from app.api.routes.router import api_router
 
+from app.api.routes.health import get_health
+
 app = FastAPI(
     title="GovVerify API",
     description="Government Document Conflict Detection & Evidence Verification System Backend",
@@ -15,11 +17,16 @@ app = FastAPI(
 
 @app.get("/")
 def root():
-    return {"status": "ok"}
+    return {"status": "ok", "message": "GovVerify Backend API"}
 
 @app.get("/api")
 def api_root():
-    return {"status": "ok"}
+    return {"status": "ok", "message": "GovVerify Backend API Root"}
+
+@app.get("/health")
+@app.get("/api/health")
+def health_check():
+    return get_health()
 
 # CORS configuration
 app.add_middleware(
