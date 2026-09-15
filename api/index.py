@@ -26,10 +26,17 @@ except Exception as e:
         async def __call__(self, scope, receive, send):
             if scope.get("type") == "http":
                 path = scope.get("path", "")
-                if path.startswith("/api/index.py"):
-                    path = path[len("/api/index.py"):]
-                elif path.startswith("/api/index"):
-                    path = path[len("/api/index"):]
+                headers = {k.decode("latin1").lower(): v.decode("latin1") for k, v in scope.get("headers", [])}
+                real_path = headers.get("x-matched-path") or headers.get("x-forwarded-uri") or headers.get("x-real-url") or headers.get("x-invoke-path") or ""
+                
+                if real_path and not real_path.startswith("/api/index"):
+                    path = real_path
+                else:
+                    if path.startswith("/api/index.py"):
+                        path = path[len("/api/index.py"):]
+                    elif path.startswith("/api/index"):
+                        path = path[len("/api/index"):]
+
                 if not path or not path.startswith("/"):
                     path = "/" + path.lstrip("/")
                 scope["path"] = path

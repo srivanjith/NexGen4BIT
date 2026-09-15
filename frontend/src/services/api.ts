@@ -123,7 +123,11 @@ export const apiService = {
   },
 
   async uploadDocument(formData: FormData): Promise<DocumentItem> {
-    const response = await apiClient.post<DocumentItem>('/api/documents/upload', formData);
+    const response = await apiClient.post<DocumentItem>('/api/documents/upload', formData, {
+      headers: {
+        'Content-Type': undefined,
+      },
+    });
     return response.data;
   },
 
