@@ -11,19 +11,34 @@ try:
 except ImportError:
     SKLEARN_AVAILABLE = False
 
-def compute_similarity_matrix(texts_a: List[str], texts_b: List[str]) -> np.ndarray:
-    """Computes TF-IDF cosine similarity matrix between two text sets."""
-    if not SKLEARN_AVAILABLE or not texts_a or not texts_b:
-        return np.zeros((len(texts_a), len(texts_b)))
+def compute_similarity_matrix(texts_a: List[str], texts_b: List[str]):
+    """Computes TF-IDF cosine similarity matrix with automatic Jaccard fallback for serverless functions."""
+    if not texts_a or not texts_b:
+        return [[0.0] * len(texts_b) for _ in range(len(texts_a))]
 
-    all_texts = texts_a + texts_b
-    vectorizer = TfidfVectorizer(stop_words='english', ngram_range=(1, 2))
-    tfidf_matrix = vectorizer.fit_transform(all_texts)
+    try:
+        from sklearn.feature_extraction.text import TfidfVectorizer
+        from sklearn.metrics.pairwise import cosine_similarity
+        all_texts = texts_a + texts_b
+        vectorizer = TfidfVectorizer(stop_words='english', ngram_range=(1, 2))
+        tfidf_matrix = vectorizer.fit_transform(all_texts)
 
-    matrix_a = tfidf_matrix[:len(texts_a)]
-    matrix_b = tfidf_matrix[len(texts_a):]
+        matrix_a = tfidf_matrix[:len(texts_a)]
+        matrix_b = tfidf_matrix[len(texts_a):]
 
-    return cosine_similarity(matrix_a, matrix_b)
+        return cosine_similarity(matrix_a, matrix_b)
+    except Exception as e:
+        logger.warning(f"TF-IDF similarity fallback triggered: {e}")
+        matrix = []
+        for ta in texts_a:
+            row = []
+            sa = set(ta.lower().split())
+            for tb in texts_b:
+                sb = set(tb.lower().split())
+                score = len(sa & sb) / float(len(sa | sb)) if (sa | sb) else 0.0
+                row.append(score)
+            matrix.append(row)
+        return matrix
 
 def match_semantic_statements(
     statements_doc_a: List[Dict[str, Any]],
@@ -43,7 +58,7 @@ def match_semantic_statements(
 
     for i, stmt_a in enumerate(statements_doc_a):
         for j, stmt_b in enumerate(statements_doc_b):
-            score = float(sim_matrix[i, j])
+            score = float(sim_matrix[i][j]) if isinstance(sim_matrix, list) else float(sim_matrix[i, j])
 
             # Also boost score if both share same attribute or subject
             sub_a = stmt_a.get("subject")
