@@ -16,48 +16,8 @@ class VercelPathFixMiddleware:
     async def __call__(self, scope, receive, send):
         if scope.get("type") == "http":
             path = scope.get("path", "")
-            query_string = scope.get("query_string", b"").decode("latin1")
 
-            headers = dict(scope.get("headers", []))
-            header_dict = {k.decode("latin1").lower(): v.decode("latin1") for k, v in headers.items()}
-
-            if "debug=1" in query_string:
-                import json
-                response_body = json.dumps({
-                    "scope_path": scope.get("path"),
-                    "raw_path": scope.get("raw_path", b"").decode("latin1"),
-                    "query_string": query_string,
-                    "headers": header_dict
-                }).encode("utf-8")
-                
-                await send({
-                    "type": "http.response.start",
-                    "status": 200,
-                    "headers": [(b"content-type", b"application/json")]
-                })
-                await send({
-                    "type": "http.response.body",
-                    "body": response_body
-                })
-                return
-
-            real_path = None
-            if "path=" in query_string:
-                import urllib.parse
-                qs = urllib.parse.parse_qs(query_string)
-                if "path" in qs and qs["path"]:
-                    real_path = qs["path"][0]
-
-            if not real_path:
-                for h in ["x-matched-path", "x-forwarded-uri", "x-original-url"]:
-                    val = header_dict.get(h)
-                    if val and not val.startswith("/api/index"):
-                        real_path = val
-                        break
-
-            if real_path:
-                path = real_path
-
+            # Strip /api/index.py or /api/index prefix if present
             if path.startswith("/api/index.py"):
                 path = path[len("/api/index.py"):]
             elif path.startswith("/api/index"):
