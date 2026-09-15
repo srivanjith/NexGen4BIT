@@ -1,5 +1,6 @@
 import os
 from pydantic_settings import BaseSettings
+from pydantic import model_validator
 
 class Settings(BaseSettings):
     # MongoDB Connection
@@ -16,13 +17,24 @@ class Settings(BaseSettings):
     UPLOADS_DIR: str = "/tmp/uploads" if (os.environ.get("VERCEL") or os.environ.get("VERCEL_ENV")) else os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", "uploads"))
     MAX_FILE_SIZE_MB: int = 10
 
-
     # AI / ML Settings
     MODEL_NAME: str = "all-MiniLM-L6-v2"
     SIMILARITY_THRESHOLD: float = 0.50
 
     # Optional External Integrations
     OPENAI_API_KEY: str = ""
+
+    @model_validator(mode="before")
+    @classmethod
+    def remove_empty_strings(cls, values):
+        if isinstance(values, dict):
+            cleaned = {}
+            for k, v in values.items():
+                if isinstance(v, str) and not v.strip():
+                    continue
+                cleaned[k] = v
+            return cleaned
+        return values
 
     class Config:
         env_file = ".env"
