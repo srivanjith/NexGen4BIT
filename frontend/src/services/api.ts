@@ -12,7 +12,10 @@ import {
 } from '../types';
 
 const getApiBaseUrl = (): string => {
-  const rawApiUrl = import.meta.env.VITE_API_URL || 'https://nex-gen4-bit.vercel.app';
+  if (typeof window !== 'undefined' && window.location.hostname.endsWith('.vercel.app')) {
+    return '';
+  }
+  const rawApiUrl = import.meta.env.VITE_API_URL || '';
   return rawApiUrl ? rawApiUrl.replace(/\/+$/, '') : 'https://nex-gen4-bit.vercel.app';
 };
 
@@ -92,13 +95,18 @@ export const apiService = {
     }
   },
 
-  async getDocument(id: string): Promise<DocumentItem | null> {
+  async getDocument(id: string): Promise<DocumentItem> {
+    const response = await apiClient.get<DocumentItem>(`/api/documents/${id}`);
+    return response.data;
+  },
+
+  async getDocumentPages(id: string): Promise<DocumentTextPage[]> {
     try {
-      const response = await apiClient.get<DocumentItem>(`/api/documents/${id}`);
-      return response.data;
+      const response = await apiClient.get<DocumentTextPage[]>(`/api/documents/${id}/pages`);
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
-      console.error(`Failed to fetch document ${id}:`, error);
-      return null;
+      console.error(`Failed to fetch pages for document ${id}:`, error);
+      return [];
     }
   },
 
@@ -123,8 +131,8 @@ export const apiService = {
   },
 
   async uploadDocument(formData: FormData): Promise<DocumentItem> {
-    const baseUrl = getApiBaseUrl() || 'https://nex-gen4-bit.vercel.app';
-    const uploadUrl = `${baseUrl}/api/documents/upload`;
+    const baseUrl = getApiBaseUrl();
+    const uploadUrl = baseUrl ? `${baseUrl.replace(/\/+$/, '')}/api/documents/upload` : '/api/documents/upload';
 
     const response = await fetch(uploadUrl, {
       method: 'POST',
