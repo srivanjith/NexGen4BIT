@@ -18,16 +18,25 @@ class VercelPathFixMiddleware:
             query_string = scope.get("query_string", b"").decode("latin1")
             path = scope.get("path", "")
 
-            if "__path__=" in query_string:
+            override_path = None
+            if "path=" in query_string or "__path__=" in query_string:
                 import urllib.parse
                 qs = urllib.parse.parse_qs(query_string)
-                if "__path__" in qs and qs["__path__"]:
-                    path = qs["__path__"][0]
+                if "path" in qs and qs["path"]:
+                    override_path = qs["path"][0]
+                elif "__path__" in qs and qs["__path__"]:
+                    override_path = qs["__path__"][0]
 
-                # Strip __path__ from query string so endpoints receive clean parameters
+                # Strip path= and __path__= from query string so endpoints receive clean parameters
                 param_list = query_string.split("&")
-                filtered_params = [p for p in param_list if not p.startswith("__path__=")]
+                filtered_params = [
+                    p for p in param_list 
+                    if not p.startswith("path=") and not p.startswith("__path__=")
+                ]
                 scope["query_string"] = "&".join(filtered_params).encode("latin1")
+
+            if override_path:
+                path = override_path
 
             if path.startswith("/api/index.py"):
                 path = path[len("/api/index.py"):]

@@ -7,10 +7,6 @@
       "destination": "/api/index.py?path=/api/$1"
     },
     {
-      "source": "/documents/upload",
-      "destination": "/api/index.py?path=/api/documents/upload"
-    },
-    {
       "source": "/health",
       "destination": "/api/index.py?path=/health"
     },
