@@ -123,8 +123,8 @@ export const DashboardPage: React.FC = () => {
     }
   };
 
-  const isDbConnected = health.database === 'connected';
-  const isBackendOnline = health.backend === 'online';
+  const isDbConnected = health.database === 'connected' || health.database.startsWith('connected') || health.status === 'healthy' || health.status === 'ok';
+  const isBackendOnline = health.backend === 'online' || health.status === 'healthy' || health.status === 'ok';
 
   const safeConflicts = Array.isArray(conflicts) ? conflicts : [];
   const safeDocuments = Array.isArray(documents) ? documents : [];
@@ -212,7 +212,7 @@ export const DashboardPage: React.FC = () => {
             <Server className="w-4 h-4 text-slate-400" />
             <span className="text-xs text-slate-600">Backend:</span>
             <span className={`px-2 py-0.5 text-xs font-semibold rounded-full ${isBackendOnline ? 'bg-emerald-100 text-emerald-800' : 'bg-rose-100 text-rose-800'}`}>
-              {isBackendOnline ? 'Connected' : 'Offline'}
+              {isBackendOnline ? 'Online' : 'Offline'}
             </span>
           </div>
 

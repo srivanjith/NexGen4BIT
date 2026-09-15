@@ -31,8 +31,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onToggleSidebar, isSidebarOpen }
     return () => clearInterval(interval);
   }, []);
 
-  const isDbConnected = health.database === 'connected';
-  const isBackendOnline = health.backend === 'online';
+  const isDbConnected = health.database === 'connected' || health.database.startsWith('connected') || health.status === 'healthy' || health.status === 'ok';
+  const isBackendOnline = health.backend === 'online' || health.status === 'healthy' || health.status === 'ok';
 
   return (
     <header className="bg-white border-b border-gov-border sticky top-0 z-30 shadow-gov-sm">

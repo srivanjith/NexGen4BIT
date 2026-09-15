@@ -12,11 +12,8 @@ import {
 } from '../types';
 
 const getApiBaseUrl = (): string => {
-  if (typeof window !== 'undefined' && window.location.hostname.endsWith('.vercel.app')) {
-    return '';
-  }
-  const rawApiUrl = import.meta.env.VITE_API_URL || '';
-  return rawApiUrl ? rawApiUrl.replace(/\/+$/, '') : '';
+  const rawApiUrl = import.meta.env.VITE_API_URL || 'https://nex-gen4-bit.vercel.app';
+  return rawApiUrl ? rawApiUrl.replace(/\/+$/, '') : 'https://nex-gen4-bit.vercel.app';
 };
 
 const API_URL = getApiBaseUrl();
@@ -33,36 +30,33 @@ export const apiService = {
   // System Health
   async getHealth(): Promise<HealthResponse> {
     try {
-      // Primary health check targeting actual FastAPI /health endpoint
-      const response = await apiClient.get<HealthResponse>('/health');
-      if (response.data) {
+      let response;
+      try {
+        response = await apiClient.get<HealthResponse>('/health');
+      } catch (err) {
+        response = await apiClient.get<HealthResponse>('/api/health');
+      }
+
+      if (response && (response.status === 200 || response.status === 304)) {
+        const data = response.data || {};
+        const isDbOk = !data.database || data.database === 'connected' || (typeof data.database === 'string' && data.database.startsWith('connected')) || data.status === 'ok' || data.status === 'healthy';
+        const isBackendOk = !data.backend || data.backend === 'online' || data.status === 'ok' || data.status === 'healthy';
+
         return {
-          status: response.data.status || 'healthy',
-          database: response.data.database || 'connected',
-          backend: response.data.backend || 'online',
+          status: data.status || 'healthy',
+          database: isDbOk ? 'connected' : (data.database || 'disconnected'),
+          backend: isBackendOk ? 'online' : (data.backend || 'offline'),
         };
       }
-      return response.data;
     } catch (error) {
-      try {
-        // Fallback check targeting /api/health
-        const fallback = await apiClient.get<HealthResponse>('/api/health');
-        if (fallback.data) {
-          return {
-            status: fallback.data.status || 'healthy',
-            database: fallback.data.database || 'connected',
-            backend: fallback.data.backend || 'online',
-          };
-        }
-      } catch (fallbackErr) {
-        // Ignored
-      }
-      return {
-        status: 'degraded',
-        database: 'disconnected',
-        backend: 'offline',
-      };
+      console.error('Health check endpoint failed:', error);
     }
+
+    return {
+      status: 'degraded',
+      database: 'disconnected',
+      backend: 'offline',
+    };
   },
 
 
