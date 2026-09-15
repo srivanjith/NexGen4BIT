@@ -14,14 +14,22 @@ def clean_text(text: str) -> str:
     return cleaned
 
 def extract_pdf_pages(file_path: str) -> List[Dict[str, Any]]:
-    """Extracts text page-by-page from PDF using PyMuPDF (fitz) or pypdf fallback."""
+    """Extracts text page-by-page from PDF using PyMuPDF (fitz)."""
     pages_data = []
-
-    # Attempt 1: PyMuPDF (fitz)
     try:
         # pyrefly: ignore [missing-import]
         import fitz  # PyMuPDF
+    except ImportError:
+        logger.warning("PyMuPDF (fitz) module is not installed in the active Python environment.")
+        return [{
+            "pageNumber": 1,
+            "section": "PDF Parsing Error",
+            "text": "PyMuPDF (fitz) is not installed. Please run 'pip install PyMuPDF' in your Python environment."
+        }]
+
+    try:
         doc = fitz.open(file_path)
+        
         for i, page in enumerate(doc):
             page_num = i + 1
             page_text = page.get_text("text")
@@ -41,7 +49,8 @@ def extract_pdf_pages(file_path: str) -> List[Dict[str, Any]]:
                         cleaned = clean_text(ocr_text)
                 except Exception as ocr_err:
                     logger.debug(f"OCR fallback skipped: {ocr_err}")
-
+            
+            # Detect section heading heuristic
             lines = [l.strip() for l in (page_text or cleaned).split('\n') if l.strip()]
             section = "General Section"
             for line in lines[:3]:
@@ -54,37 +63,17 @@ def extract_pdf_pages(file_path: str) -> List[Dict[str, Any]]:
                 "section": section,
                 "text": cleaned if cleaned else f"[Scanned/Image Page {page_num}]"
             })
+            
         doc.close()
-        if pages_data:
-            return pages_data
     except Exception as e:
-        logger.debug(f"PyMuPDF not available or failed: {e}")
-
-    # Attempt 2: pypdf fallback
-    try:
-        # pyrefly: ignore [missing-import]
-        import pypdf
-        reader = pypdf.PdfReader(file_path)
-        for i, page in enumerate(reader.pages):
-            page_num = i + 1
-            page_text = page.extract_text() or ""
-            cleaned = clean_text(page_text)
-            pages_data.append({
-                "pageNumber": page_num,
-                "section": f"Page {page_num}",
-                "text": cleaned if cleaned else f"[Page {page_num}]"
-            })
-        if pages_data:
-            return pages_data
-    except Exception as e:
-        logger.debug(f"pypdf fallback failed: {e}")
-
-    # Fallback default: Return safe placeholder so upload pipeline continues
-    return [{
-        "pageNumber": 1,
-        "section": "Main Document",
-        "text": f"PDF document '{os.path.basename(file_path)}' uploaded and registered successfully."
-    }]
+        logger.error(f"PyMuPDF failed to extract text from {file_path}: {str(e)}")
+        pages_data.append({
+            "pageNumber": 1,
+            "section": "Main Document",
+            "text": f"Error extracting PDF text: {str(e)}"
+        })
+        
+    return pages_data
 
 def extract_docx_pages(file_path: str) -> List[Dict[str, Any]]:
     """Extracts paragraphs and headings from DOCX using python-docx."""
