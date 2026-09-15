@@ -11,8 +11,15 @@ import {
   AuditReport
 } from '../types';
 
-const rawApiUrl = import.meta.env.VITE_API_URL || '';
-const API_URL = rawApiUrl ? rawApiUrl.replace(/\/+$/, '') : '';
+const getApiBaseUrl = (): string => {
+  if (typeof window !== 'undefined' && window.location.hostname.endsWith('.vercel.app')) {
+    return '';
+  }
+  const rawApiUrl = import.meta.env.VITE_API_URL || '';
+  return rawApiUrl ? rawApiUrl.replace(/\/+$/, '') : '';
+};
+
+const API_URL = getApiBaseUrl();
 
 export const apiClient = axios.create({
   baseURL: API_URL,
