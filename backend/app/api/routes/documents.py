@@ -85,44 +85,50 @@ async def upload_document(
         "createdAt": now_iso
     }
 
-    collection = get_collection("documents")
-    statements_collection = get_collection("statements")
+    try:
+        collection = get_collection("documents")
+        statements_collection = get_collection("statements")
 
-    if collection is not None:
-        result = collection.insert_one(doc_data)
-        doc_id_str = str(result.inserted_id)
-        doc_data["_id"] = doc_id_str
+        if collection is not None:
+            result = collection.insert_one(doc_data)
+            doc_id_str = str(result.inserted_id)
+            doc_data["_id"] = doc_id_str
 
-        # Process text pages and extract atomic statement claims into MongoDB
-        try:
-            pages = process_document(file_path, clean_name)
-            page_count = len(pages) if pages else 1
-            
-            stmts = extract_statements_from_text(pages, doc_id_str)
-            if statements_collection is not None and stmts:
-                for s in stmts:
-                    statements_collection.insert_one(s)
+            # Process text pages and extract atomic statement claims into MongoDB
+            try:
+                pages = process_document(file_path, clean_name)
+                page_count = len(pages) if pages else 1
+                
+                stmts = extract_statements_from_text(pages, doc_id_str)
+                if statements_collection is not None and stmts:
+                    for s in stmts:
+                        statements_collection.insert_one(s)
 
-            collection.update_one(
-                {"_id": result.inserted_id},
-                {"$set": {"pageCount": page_count, "status": "analyzed"}}
-            )
-            doc_data["pageCount"] = page_count
-            doc_data["status"] = "analyzed"
-            doc_data["extractedStatementsCount"] = len(stmts)
+                collection.update_one(
+                    {"_id": result.inserted_id},
+                    {"$set": {"pageCount": page_count, "status": "analyzed"}}
+                )
+                doc_data["pageCount"] = page_count
+                doc_data["status"] = "analyzed"
+                doc_data["extractedStatementsCount"] = len(stmts)
 
-            # Auto-run analysis across all documents in DB if >= 2 docs
-            all_docs = list(collection.find({"isDataset": False}))
-            if len(all_docs) >= 2:
-                all_ids = [str(d["_id"]) for d in all_docs]
-                run_document_analysis_pipeline(all_ids)
+                # Auto-run analysis across all documents in DB if >= 2 docs
+                all_docs = list(collection.find({"isDataset": False}))
+                if len(all_docs) >= 2:
+                    all_ids = [str(d["_id"]) for d in all_docs]
+                    run_document_analysis_pipeline(all_ids)
 
-        except Exception as proc_err:
-            print(f"Extraction warning on upload: {proc_err}")
-    else:
-        # DB fallback mode
-        doc_data["_id"] = str(uuid.uuid4())
-        doc_data["status"] = "uploaded (in-memory preview)"
+            except Exception as proc_err:
+                print(f"Extraction warning on upload: {proc_err}")
+        else:
+            # DB fallback mode
+            doc_data["_id"] = str(uuid.uuid4())
+            doc_data["status"] = "uploaded"
+    except Exception as db_err:
+        print(f"MongoDB operation warning on upload: {db_err}")
+        if "_id" not in doc_data:
+            doc_data["_id"] = str(uuid.uuid4())
+        doc_data["status"] = "uploaded"
 
     return doc_data
 
