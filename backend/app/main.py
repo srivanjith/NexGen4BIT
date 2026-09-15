@@ -34,6 +34,9 @@ app = FastAPI(
 
 app.add_middleware(VercelPathFixMiddleware)
 
+from typing import Optional
+from fastapi import UploadFile, File, Form
+
 @app.get("/")
 def root():
     return {"status": "ok", "message": "GovVerify Backend API"}
@@ -46,6 +49,19 @@ def api_root():
 @app.get("/api/health")
 def health_check():
     return get_health()
+
+@app.post("/documents/upload")
+@app.post("/documents/upload/")
+@app.post("/api/documents/upload")
+@app.post("/api/documents/upload/")
+async def direct_upload_document(
+    file: UploadFile = File(...),
+    documentType: str = Form("Government Order"),
+    department: str = Form("General"),
+    documentDate: Optional[str] = Form(None)
+):
+    from app.api.routes.documents import upload_document
+    return await upload_document(file, documentType, department, documentDate)
 
 # CORS configuration
 app.add_middleware(
