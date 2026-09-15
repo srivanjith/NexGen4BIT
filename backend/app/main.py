@@ -45,6 +45,10 @@ class VercelPathFixMiddleware:
             if not path or not path.startswith("/"):
                 path = "/" + path.lstrip("/")
 
+            # If path doesn't start with /api and is an API endpoint like /documents or /stats, prefix with /api
+            if not path.startswith("/api") and path != "/" and not path.startswith("/health"):
+                path = "/api" + path
+
             scope["path"] = path
         await self.app(scope, receive, send)
 

@@ -3,12 +3,12 @@
   "outputDirectory": "frontend/dist",
   "rewrites": [
     {
-      "source": "/api/:path*",
-      "destination": "/api/index.py?__path__=/api/:path*"
+      "source": "/api/(.*)",
+      "destination": "/api/index.py/$1"
     },
     {
       "source": "/health",
-      "destination": "/api/index.py?__path__=/health"
+      "destination": "/api/index.py/health"
     },
     {
       "source": "/(.*)",
