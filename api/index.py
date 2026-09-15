@@ -18,8 +18,24 @@ except Exception as e:
 
     import traceback
     error_detail = traceback.format_exc()
-    from fastapi import FastAPI
+    class VercelPathFixMiddleware:
+        def __init__(self, app):
+            self.app = app
+
+        async def __call__(self, scope, receive, send):
+            if scope.get("type") == "http":
+                path = scope.get("path", "")
+                if path.startswith("/api/index.py"):
+                    path = path[len("/api/index.py"):]
+                elif path.startswith("/api/index"):
+                    path = path[len("/api/index"):]
+                if not path or not path.startswith("/"):
+                    path = "/" + path.lstrip("/")
+                scope["path"] = path
+            await self.app(scope, receive, send)
+
     app = FastAPI(title="GovVerify API Fallback")
+    app.add_middleware(VercelPathFixMiddleware)
 
     @app.get("/")
     @app.get("/api")

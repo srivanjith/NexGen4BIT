@@ -9,11 +9,30 @@ from app.api.routes.router import api_router
 
 from app.api.routes.health import get_health
 
+class VercelPathFixMiddleware:
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope.get("type") == "http":
+            path = scope.get("path", "")
+            if path.startswith("/api/index.py"):
+                path = path[len("/api/index.py"):]
+            elif path.startswith("/api/index"):
+                path = path[len("/api/index"):]
+            
+            if not path or not path.startswith("/"):
+                path = "/" + path.lstrip("/")
+            scope["path"] = path
+        await self.app(scope, receive, send)
+
 app = FastAPI(
     title="GovVerify API",
     description="Government Document Conflict Detection & Evidence Verification System Backend",
     version="1.0.0"
 )
+
+app.add_middleware(VercelPathFixMiddleware)
 
 @app.get("/")
 def root():
