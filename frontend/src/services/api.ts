@@ -12,10 +12,7 @@ import {
 } from '../types';
 
 const getApiBaseUrl = (): string => {
-  if (typeof window !== 'undefined' && window.location.hostname.endsWith('.vercel.app')) {
-    return '';
-  }
-  const rawApiUrl = import.meta.env.VITE_API_URL || '';
+  const rawApiUrl = import.meta.env.VITE_API_URL || 'https://nex-gen4-bit.vercel.app';
   return rawApiUrl ? rawApiUrl.replace(/\/+$/, '') : 'https://nex-gen4-bit.vercel.app';
 };
 
@@ -131,8 +128,8 @@ export const apiService = {
   },
 
   async uploadDocument(formData: FormData): Promise<DocumentItem> {
-    const baseUrl = getApiBaseUrl();
-    const uploadUrl = baseUrl ? `${baseUrl.replace(/\/+$/, '')}/api/documents/upload` : '/api/documents/upload';
+    const rawUrl = getApiBaseUrl();
+    const uploadUrl = rawUrl ? `${rawUrl.replace(/\/+$/, '')}/api/documents/upload` : 'https://nex-gen4-bit.vercel.app/api/documents/upload';
 
     const response = await fetch(uploadUrl, {
       method: 'POST',
