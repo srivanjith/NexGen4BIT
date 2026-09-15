@@ -69,11 +69,11 @@ export const DashboardPage: React.FC = () => {
         apiService.getAnalyses()
       ]);
 
-      setStats(statsData);
-      setHealth(healthData);
-      setDocuments(docsData);
-      setConflicts(conflictsData);
-      setAnalyses(analysesData);
+      setStats(statsData || { documentsAnalyzed: 0, statementsExtracted: 0, conflictsFound: 0, possibleConflicts: 0 });
+      setHealth(healthData || { status: 'degraded', database: 'disconnected', backend: 'offline' });
+      setDocuments(Array.isArray(docsData) ? docsData : []);
+      setConflicts(Array.isArray(conflictsData) ? conflictsData : []);
+      setAnalyses(Array.isArray(analysesData) ? analysesData : []);
     } catch (error) {
       console.error('Failed to load dashboard data:', error);
     } finally {
@@ -126,10 +126,14 @@ export const DashboardPage: React.FC = () => {
   const isDbConnected = health.database === 'connected';
   const isBackendOnline = health.backend === 'online';
 
+  const safeConflicts = Array.isArray(conflicts) ? conflicts : [];
+  const safeDocuments = Array.isArray(documents) ? documents : [];
+  const safeAnalyses = Array.isArray(analyses) ? analyses : [];
+
   // Prepare Chart Data
   const conflictTypeCounts: Record<string, number> = {};
-  conflicts.forEach(c => {
-    const typeKey = c.conflictType.replace('_', ' ');
+  safeConflicts.forEach(c => {
+    const typeKey = (c.conflictType || 'UNKNOWN').replace('_', ' ');
     conflictTypeCounts[typeKey] = (conflictTypeCounts[typeKey] || 0) + 1;
   });
 
@@ -143,9 +147,9 @@ export const DashboardPage: React.FC = () => {
       ];
 
   const severityCounts = {
-    High: conflicts.filter(c => c.severity === 'HIGH').length || 4,
-    Medium: conflicts.filter(c => c.severity === 'MEDIUM').length || 3,
-    Low: conflicts.filter(c => c.severity === 'LOW').length || 2,
+    High: safeConflicts.filter(c => c.severity === 'HIGH').length || 4,
+    Medium: safeConflicts.filter(c => c.severity === 'MEDIUM').length || 3,
+    Low: safeConflicts.filter(c => c.severity === 'LOW').length || 2,
   };
 
   const pieChartData = [
@@ -232,7 +236,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-gov-dark font-mono">{documents.length || stats.documentsAnalyzed}</span>
+            <span className="text-3xl font-extrabold text-gov-dark font-mono">{safeDocuments.length || stats.documentsAnalyzed}</span>
             <span className="text-xs text-slate-400 font-medium">Uploaded Documents</span>
           </div>
         </div>
@@ -245,7 +249,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-gov-dark font-mono">{stats.statementsExtracted || (documents.length * 8)}</span>
+            <span className="text-3xl font-extrabold text-gov-dark font-mono">{stats.statementsExtracted || (safeDocuments.length * 8)}</span>
             <span className="text-xs text-slate-400 font-medium">Atomic Claims</span>
           </div>
         </div>
@@ -258,7 +262,7 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-gov-dark font-mono">{conflicts.length || stats.conflictsFound}</span>
+            <span className="text-3xl font-extrabold text-gov-dark font-mono">{safeConflicts.length || stats.conflictsFound}</span>
             <span className="text-xs text-rose-700 font-semibold bg-rose-50 px-2 py-0.5 rounded">High Severity</span>
           </div>
         </div>
@@ -363,7 +367,7 @@ export const DashboardPage: React.FC = () => {
           </button>
         </div>
 
-        {analyses.length === 0 ? (
+        {safeAnalyses.length === 0 ? (
           <div className="p-8 text-center">
             <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
               <Clock className="w-6 h-6" />
@@ -397,7 +401,7 @@ export const DashboardPage: React.FC = () => {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100 font-medium">
-                {analyses.map(an => (
+                {safeAnalyses.map(an => (
                   <tr key={an._id} className="hover:bg-slate-50 transition-colors">
                     <td className="py-3 px-4 font-mono font-bold text-gov-navy">
                       #{an._id.substring(an._id.length - 8)}

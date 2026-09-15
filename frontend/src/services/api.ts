@@ -84,13 +84,12 @@ export const apiService = {
 
       const url = `/api/documents${queryParams.toString() ? `?${queryParams.toString()}` : ''}`;
       const response = await apiClient.get<DocumentItem[]>(url);
-      return response.data;
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error('Failed to fetch documents:', error);
       return [];
     }
   },
-
 
   async getDocument(id: string): Promise<DocumentItem | null> {
     try {
@@ -105,7 +104,7 @@ export const apiService = {
   async getDocumentText(id: string): Promise<DocumentTextPage[]> {
     try {
       const response = await apiClient.get<DocumentTextPage[]>(`/api/documents/${id}/text`);
-      return response.data;
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error(`Failed to fetch text for document ${id}:`, error);
       return [];
@@ -115,7 +114,7 @@ export const apiService = {
   async getDocumentStatements(id: string): Promise<StatementItem[]> {
     try {
       const response = await apiClient.get<StatementItem[]>(`/api/documents/${id}/statements`);
-      return response.data;
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error(`Failed to fetch statements for document ${id}:`, error);
       return [];
@@ -163,8 +162,6 @@ export const apiService = {
     }
   },
 
-
-
   // Analysis Pipeline
   async startAnalysis(documentIds: string[]): Promise<AnalysisRun> {
     const response = await apiClient.post<AnalysisRun>('/api/analysis/start', { documentIds });
@@ -174,7 +171,7 @@ export const apiService = {
   async getAnalyses(): Promise<AnalysisRun[]> {
     try {
       const response = await apiClient.get<AnalysisRun[]>('/api/analysis');
-      return response.data;
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       return [];
     }
@@ -189,7 +186,7 @@ export const apiService = {
       if (userOnly !== undefined) params.append('userOnly', userOnly.toString());
       
       const response = await apiClient.get<ConflictItem[]>(`/api/conflicts?${params.toString()}`);
-      return response.data;
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       console.error('Failed to fetch conflicts:', error);
       return [];
@@ -211,7 +208,7 @@ export const apiService = {
       const params = new URLSearchParams();
       if (userOnly !== undefined) params.append('userOnly', userOnly.toString());
       const response = await apiClient.get<any[]>(`/api/evidence?${params.toString()}`);
-      return response.data;
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       return [];
     }
@@ -220,7 +217,7 @@ export const apiService = {
   async getEvidence(conflictId: string): Promise<EvidenceItem[]> {
     try {
       const response = await apiClient.get<EvidenceItem[]>(`/api/evidence/${conflictId}`);
-      return response.data;
+      return Array.isArray(response.data) ? response.data : [];
     } catch (error) {
       return [];
     }
