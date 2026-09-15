@@ -11,8 +11,8 @@ import {
   AuditReport
 } from '../types';
 
-const rawApiUrl = import.meta.env.VITE_API_URL || 'https://nex-gen4-bit.vercel.app';
-const API_URL = rawApiUrl.replace(/\/+$/, '');
+const rawApiUrl = import.meta.env.VITE_API_URL || '';
+const API_URL = rawApiUrl ? rawApiUrl.replace(/\/+$/, '') : '';
 
 export const apiClient = axios.create({
   baseURL: API_URL,
