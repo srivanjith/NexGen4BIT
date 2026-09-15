@@ -1,5 +1,6 @@
 import os
 import sys
+from fastapi import FastAPI
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 backend_path = os.path.abspath(os.path.join(current_dir, '..', 'backend'))
