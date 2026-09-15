@@ -27,6 +27,7 @@ def serialize_doc(doc):
 from app.services.analysis_service import run_document_analysis_pipeline
 
 @router.post("/upload")
+@router.post("/upload/")
 async def upload_document(
     file: UploadFile = File(...),
     documentType: str = Form("Government Order"),
