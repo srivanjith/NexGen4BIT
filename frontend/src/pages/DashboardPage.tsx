@@ -236,7 +236,9 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-gov-dark font-mono">{safeDocuments.length || stats.documentsAnalyzed}</span>
+            <span className="text-3xl font-extrabold text-gov-dark font-mono">
+              {safeDocuments.length > 0 ? safeDocuments.length : (stats?.documentsAnalyzed ?? 0)}
+            </span>
             <span className="text-xs text-slate-400 font-medium">Uploaded Documents</span>
           </div>
         </div>
@@ -249,7 +251,9 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-gov-dark font-mono">{stats.statementsExtracted || (safeDocuments.length * 8)}</span>
+            <span className="text-3xl font-extrabold text-gov-dark font-mono">
+              {stats?.statementsExtracted ?? (safeDocuments.length * 8)}
+            </span>
             <span className="text-xs text-slate-400 font-medium">Atomic Claims</span>
           </div>
         </div>
@@ -262,7 +266,9 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-gov-dark font-mono">{safeConflicts.length || stats.conflictsFound}</span>
+            <span className="text-3xl font-extrabold text-gov-dark font-mono">
+              {safeConflicts.length > 0 ? safeConflicts.length : (stats?.conflictsFound ?? 0)}
+            </span>
             <span className="text-xs text-rose-700 font-semibold bg-rose-50 px-2 py-0.5 rounded">High Severity</span>
           </div>
         </div>
@@ -275,7 +281,9 @@ export const DashboardPage: React.FC = () => {
             </div>
           </div>
           <div className="mt-4 flex items-baseline justify-between">
-            <span className="text-3xl font-extrabold text-gov-dark font-mono">{stats.possibleConflicts || 2}</span>
+            <span className="text-3xl font-extrabold text-gov-dark font-mono">
+              {stats?.possibleConflicts ?? 0}
+            </span>
             <span className="text-xs text-slate-400 font-medium font-sans">Exceptions & Shifts</span>
           </div>
         </div>
