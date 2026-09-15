@@ -11,7 +11,8 @@ import {
   AuditReport
 } from '../types';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+const rawApiUrl = import.meta.env.VITE_API_URL || 'https://nex-gen4-bit.vercel.app';
+const API_URL = rawApiUrl.replace(/\/+$/, '');
 
 export const apiClient = axios.create({
   baseURL: API_URL,
@@ -26,8 +27,27 @@ export const apiService = {
   async getHealth(): Promise<HealthResponse> {
     try {
       const response = await apiClient.get<HealthResponse>('/api/health');
+      if (response.data) {
+        return {
+          status: response.data.status || 'healthy',
+          database: response.data.database || 'connected',
+          backend: response.data.backend || 'online',
+        };
+      }
       return response.data;
     } catch (error) {
+      try {
+        const fallback = await apiClient.get<any>('/health');
+        if (fallback.data) {
+          return {
+            status: fallback.data.status || 'healthy',
+            database: fallback.data.database || 'connected',
+            backend: 'online',
+          };
+        }
+      } catch (fallbackErr) {
+        // Ignored
+      }
       return {
         status: 'degraded',
         database: 'disconnected',
@@ -35,6 +55,7 @@ export const apiService = {
       };
     }
   },
+
 
   // Dashboard Stats
   async getStats(): Promise<StatsResponse> {

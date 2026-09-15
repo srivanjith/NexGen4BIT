@@ -7,7 +7,9 @@ router = APIRouter()
 def read_root():
     return {"status": "ok"}
 
+@router.get("/health")
 @router.get("/api/health")
+@router.get("/healthz")
 def get_health():
     is_db_connected, db_msg = check_db_health()
     return {
@@ -15,3 +17,4 @@ def get_health():
         "database": "connected" if is_db_connected else f"disconnected ({db_msg})",
         "backend": "online"
     }
+
