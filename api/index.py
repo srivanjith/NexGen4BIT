@@ -26,16 +26,6 @@ except Exception as e:
         async def __call__(self, scope, receive, send):
             if scope.get("type") == "http":
                 path = scope.get("path", "")
-                query_string = scope.get("query_string", b"").decode("latin1")
-
-                if "__path__=" in query_string:
-                    import urllib.parse
-                    qs_dict = urllib.parse.parse_qs(query_string)
-                    if "__path__" in qs_dict and qs_dict["__path__"]:
-                        extracted = qs_dict["__path__"][0]
-                        if extracted:
-                            path = extracted
-
                 if path.startswith("/api/index.py"):
                     path = path[len("/api/index.py"):]
                 elif path.startswith("/api/index"):
